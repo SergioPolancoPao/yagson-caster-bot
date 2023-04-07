@@ -1,8 +1,9 @@
 # bot.py
 import os
+import asyncio
 
 import discord
-from discord.ext import commands
+from discord.ext.commands import Bot
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,20 +12,16 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents.default()
 intents.message_content = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = Bot(command_prefix="!", intents=intents)
 
-@bot.event
-async def on_ready():
-    print(f'{bot.user} succesfully logged in!')
+async def load_extensions():
+    for filename in os.listdir("./cogs"):
+        if filename.endswith(".py"):
+            await bot.load_extension(f"cogs.{filename[:-3]}")
 
-@bot.event
-async def on_message(message):
-    print(f'Message from {message.author}: {message.content}')
-    await bot.process_commands(message)
+async def main():
+    async with bot:
+        await load_extensions()
+        await bot.start(TOKEN)
 
-@bot.command(name="hello")
-async def hello(ctx):
-    print('enter')
-    await ctx.send('Pong')
-
-bot.run(TOKEN)
+asyncio.run(main())
